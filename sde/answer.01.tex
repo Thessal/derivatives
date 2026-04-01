@@ -1,0 +1,143 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{physics}
+
+\title{Thoughts on symmetry, in Physics and Finance}
+\author{Jongkook Choi}
+\date{\today}
+\begin{document}
+
+\maketitle
+
+\section{Infinitesimal Changes in Physics}
+\begin{description}
+    \item[Definition] Generator is a infinitesimal change operators derived from symmetries of the space (Lie groups and Noether's theorem) or the underlying rules of the random process (stochastic calculus). This abstracts a differential equation into a continuous-compounding(financial analogy, $U = e^{A\theta}$) structure.
+    \item[Observation] Smooth trajectory
+          \begin{itemize}
+              \item From a classical system defined by a Lagrangian $L(q, \dot{q})$, a physicist discovers $SO(2)$ symmetry from his intuition. To prove the intuition, one should show that $L(q, \dot{q})$ is invariant under a continuous spatial rotation.
+              \item From the intuition or geometric observation, mathematical notation of first order approximation of infinitesimal rotation is defined as below. First order approximation is enough for smooth trajectory. (Note that brownian motion is not differentiable in every point)
+                    \begin{align*}
+                        \delta x & = -y \delta\phi \\
+                        \delta y & = x \delta\phi
+                    \end{align*}
+              \item From the definiton of $L(q,\dot{q})$ and the relationship about $\delta\phi$ above, $\delta L = 0$ is derived. It is a formal confirmation of the symmetry.
+              \item To canonically identify the conserved quantity, Noether's theorem is applied. (Time $t$ is introduced here, based on similar logic with the Euler-Lagrange equations).
+                    \begin{equation*}
+                        \delta L = \frac{d}{dt} \left( p_x \delta x + p_y \delta y \right) = \left[ \frac{d}{dt} \left( x p_y - y p_x \right) \right] \delta\phi = \left[ \frac{d}{dt} \left( \frac{\partial L}{\partial \dot{\phi}} \right) \right] \delta\phi = 0
+                    \end{equation*}
+                    This formally shows that the generalized momentum $p_\phi = \frac{\partial L}{\partial \dot{\phi}}$ is exactly the conserved rotational quantity.
+              \item Using a conserved physical quantity, the description of system can be changed. (like we handle constraints in convex optimization). Generator of the rotation is
+                    \begin{align*}
+                        L_z              & = x p_y - y p_x \\
+                        \frac{d L_z}{dt} & = 0
+                    \end{align*}
+                    Financial analogy is, discovering the risk-neutral pricing from the symmetric pricing over markets (Law of One Price)
+          \end{itemize}
+
+    \item[Observation]Quantum Mechanics
+          \begin{itemize}
+              \item From a quantum system with an internal two-state degree of freedom (a spinor $|\psi\rangle \in \mathbb{C}^2$), a physicist discovers $SU(2)$ symmetry from his counterintuitive observation (e.g., the Stern-Gerlach experiment and the anomalous Zeeman effect). \\
+                    To prove updated intuition that explains the observation, one should show that  Hamiltonian $\hat{H}$ is invariant under the unitary transformation: $U\hat{H} = \hat{H} U$ or, $U^{-1} \hat{H} U = \hat{H}$.
+              \item For $SU(2)$ symmetry, the unitary transformation is defined as $U(\boldsymbol{\theta}) = \exp\left(-i \frac{\boldsymbol{\theta} \cdot \hat{\mathbf{S}}}{\hbar}\right)$, using generator notation. \\
+                    ($\frac{d A}{d t} = \{ A, H\}$ for classical mechanics, $\frac{d A}{d t} = \frac{i}{\hbar}[H,A]$ for quantum mechanics.)\\
+                    Expansion of invariance contition yields the below equation. Generator is time-independent.
+                    \begin{equation}
+                        [\hat{H}, \hat{\mathbf{S}}] = 0
+                    \end{equation}
+              \item
+                    The generators of the $SU(2)$ Lie group are
+                    \begin{equation}
+                        [\hat{S}_i, \hat{S}_j] = i\hbar \epsilon_{ijk} \hat{S}_k
+                    \end{equation}
+                    For a spin-1/2 particle, Pauli matrices $\sigma_i$ are
+                    \begin{equation}
+                        \hat{S}_i = \frac{\hbar}{2} \sigma_i
+                    \end{equation}
+              \item Spin angular momentum is conserved.
+                    \begin{equation}
+                        \frac{d}{dt} \langle \hat{\mathbf{S}} \rangle = 0
+                    \end{equation}
+                    Heisenberg EOM : $\frac{d}{dt}\langle \hat{A} \rangle = \frac{i}{\hbar} \langle [\hat{H}, \hat{A}] \rangle$
+          \end{itemize}
+    \item[Observation] Quantum Field Theory \\(Caution: I don't know not deeply about this field.)
+          \begin{itemize}
+              \item
+                    Infinitesimal Lorentz transformation $x^\mu \to x^\mu + \omega^{\mu\nu}x_\nu$
+              \item Transformation of Spinor field:
+                    \begin{equation}
+                        \delta \psi = -\frac{i}{4} \omega_{\mu\nu} \Sigma^{\mu\nu} \psi
+                    \end{equation}
+              \item
+                    Noether's theorem yields a conserved current $M^{\rho\mu\nu}$
+          \end{itemize}
+\end{description}
+
+\section{Infinitesimal Change in Finance}
+
+\begin{description}
+    \item[Observation] Time symmetry vs. Causality
+          \begin{description}
+              \item[Operator theory] Ito integral vs Stratonovich integral.
+              \item[Semi-group theory] The infinitesimal generator (e.g., the Markov Transition Matrix in the discrete case, or the differential operator in the continuous case) is irreversible. (Oscillation vs. Diffusion). \\
+                    Diffusion is governed by parabolic PDEs in both physics and finance, but with a reversed arrow of time. Physics utilizes the Fokker-Planck equation to trace the \textit{forward} evolution of a probability density into the future. Finance utilizes the Black-Scholes equation (via Feynman-Kac) to trace the \textit{backward} evolution of an instrument's price from a known future payoff to the present.
+              \item[Sideway question] Diffusion models are good at generating realistic diffusion process by learning reverse diffusion dynamics. Does it imply that diffusion models are good at pricing options?
+          \end{description}
+    \item[Observation] Smooth vs. Rough Trajectory
+          \begin{itemize}
+              \item Deterministic spatial rotations have bounded variation, stopping at the first derivative. Brownian paths have infinite variation, forcing the inclusion of the second-order $(dX_t)^2$ term.
+          \end{itemize}
+    \item[Observation] Geometric symmetry vs. Event symmetry (or, geometric probability vs. measure theory) ~\\
+          In SDEs, the state space operates under the Wiener measure, which dictates the probability distribution of the trajectory, not geometric infinitesimal change. That is the reason why we need the path integral.
+\end{description}
+
+
+\subsection{Time-Reversal and Time-Symmetry}
+
+SDEs can be ambiguous when the generator is not Hermitian.
+Writing in integral equation can clarify the difference.
+
+\begin{description}
+    \item[Time Evolution Operator] ~\\
+          Define time evolution operator $\hat{E} = \sum_i \ket{i}\bra{i+1}$ where $\ket{i}$ is $t=i$ basis. \\
+          You can think time evolution operator as $e^{\Delta t \frac{d}{dt}}$, ( first order approximation is $1+\Delta t \frac{d}{dt}$ )\\
+          Or, ladder operator, transition matrix of Markov chain, with $x_{i,i+1}=1$.\\
+          These are all different notations with same meaning.
+    \item[Brownian Path]
+          $\ket{W}=\sum_i W_i \ket{i}$\\
+          $W_t$ is a random variable, $W$ is a stochastic process.
+    \item[Observable process]
+          $\bra{X}=\sum_i X_i \bra{i}$
+
+    \item[It\^o Integral] The process is causal. Time-reversal symmetry is broken.
+          \begin{align*}
+                & \sum_i X_i (W_{i+1}- W_i)= \bra{X} (\hat{E} - \hat{I}) \ket{W}                        \\
+              = & \int_0^T X_t \, dW_t = \lim_{\Delta t \to 0} \sum_{i} X_{t_i} (W_{t_{i+1}} - W_{t_i})
+          \end{align*}
+    \item[Backward Integral]
+          \begin{align*}
+                & \sum_i X_{i+1} (W_{i+1}- W_i)= \bra{X} \hat{E}^{\dagger} (\hat{E}- \hat{I}) \ket{W}                       \\
+              = & \int_0^T X_t \, \overleftarrow{dW}_t = \lim_{\Delta t \to 0} \sum_{i} X_{t_{i+1}} (W_{t_{i+1}} - W_{t_i})
+          \end{align*}
+    \item[Stratonovich Integral]
+          The generator $M$ can be symmetrized into $\frac{M+M^T}{2}$ where $M$ is the Ito integral operator.
+          \begin{align*}
+              \int_0^T X_t \circ dW_t & \equiv \frac{1}{2} \left( \int_0^T X_t \, dW_t + \int_0^T X_t \, \overleftarrow{dW}_t \right)                                \\
+                                      & =                                                 - \frac{1}{2} \bra{X} ( 1 + \hat{E}^{\dagger}) (\hat{E} - \hat{I}) \ket{W} \\
+                                      & = \lim_{\Delta t \to 0} \sum_{i} X_{\frac{t_i + t_{i+1}}{2}} (W_{t_{i+1}} - W_{t_i})
+          \end{align*}
+    \item[Antisymmetric Component]
+          It\^o-Stratonovich conversion
+          \begin{align*}
+              \int_0^T X_t \, dW_t - \int_0^T X_t \circ dW_t = & - \frac{1}{2} \langle X, W \rangle_T                                                         \\
+              =                                                & - \frac{1}{2} \bra{X} (\hat{E}^\dagger - \hat{I}) (\hat{E} - \hat{I}) \ket{W}                \\
+              =                                                & - \frac{1}{2} \lim_{\Delta t \to 0} \sum_{i} (X_{t_{i+1}} - X_{t_i}) (W_{t_{i+1}} - W_{t_i})
+          \end{align*}
+
+\end{description}
+
+
+
+
+
+\end{document}
