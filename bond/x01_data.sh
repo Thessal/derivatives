@@ -1,0 +1,2 @@
+wget https://data-api.londonstrategicedge.com/download/economic-calendar/US/2025.csv.gz -O- | zcat | grep "Bond Auction" > x01_gvt_US.csv
+wget https://data-api.londonstrategicedge.com/download/economic-calendar/KR/2025.csv.gz -O- | zcat | grep "KTB Auction">  x01_gvt_KR.csv
