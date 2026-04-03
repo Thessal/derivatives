@@ -1,5 +1,0 @@
-What is "strip"? ( p 86 )
-What is eurodollar futures? ( p 139 )
-
-KTB 50y case, settle date is after the first coupon date. 
-How to price bond from this case?
