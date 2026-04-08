@@ -9,7 +9,7 @@ in pkgs.mkShell{
     pkgs.google-chrome
     antigravity
   ] ++ (with pkgs; [
-    python313 ( with python313.pkgs; [requests pandas linearmodels numpy scipy statsmodels sympy] )
+    python313 ( with python313.pkgs; [requests pandas linearmodels numpy scipy statsmodels sympy lxml] )
     jq
     python313 ( with python313.pkgs; [ipykernel matplotlib] )
   ]) ;
