@@ -1,0 +1,90 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{physics}
+
+\title{On Geometry}
+\author{Jongkook Choi}
+\date{\today}
+\begin{document}
+
+\maketitle
+
+\section{Warning}
+The author don't know about differential geometry.
+
+\section{Determinisitc trajectory on manifold}
+We have learnt about differential geometry in the university.
+
+\begin{description}
+    \item[Path] ~
+          \begin{description}
+              \item[Explicit equation] $f(x_1,x_2) = 0$
+              \item[Implicit equation] $\vec{x} = \vec{f}(t)$
+          \end{description}
+    \item[Integral]
+          $\vec{Y}(\vec{x}) = \int_{\vec{x}=\vec{f}(0)}^{\vec{f}(T)} \overleftrightarrow{y}(\vec{x}) \cdot d \vec{x}
+              = \int_{t=0}^{T} \overleftrightarrow{y}(\vec{f}(t)) \cdot \vec{f}'(t) dt$
+    \item[Jacobian 1D] ~\\
+          $\vec{y} = \nabla_x Y = \begin{pmatrix} \frac{dY}{dx_1}  & \frac{dY}{dx_2} \end{pmatrix}$\\
+          $\vec{y}\cdot d\vec{x} = \begin{pmatrix} \frac{dY}{dx_1} & \frac{dY}{dx_2} \end{pmatrix} \begin{pmatrix} dx_1 \\ dx_2 \end{pmatrix} = \begin{pmatrix} \frac{dY}{dx_1}dx_1 + \frac{dY}{dx_2}dx_2 \end{pmatrix}$\\
+    \item[Jacobian 2D] ~\\
+          $\overleftrightarrow{y} = \nabla_x \vec{Y} = \begin{pmatrix} \frac{dY_1}{dx_1} & \frac{dY_1}{dx_2} \\ \frac{dY_2}{dx_1} & \frac{dY_2}{dx_2} \end{pmatrix}$\\
+          $\overleftrightarrow{y}\cdot d\vec{x} = \begin{pmatrix} \frac{dY_1}{dx_1} & \frac{dY_1}{dx_2} \\ \frac{dY_2}{dx_1} & \frac{dY_2}{dx_2} \end{pmatrix} \begin{pmatrix} dx_1 \\ dx_2 \end{pmatrix} = \begin{pmatrix} \frac{dY_1}{dx_1}dx_1 + \frac{dY_1}{dx_2}dx_2 \\ \frac{dY_2}{dx_1}dx_1 + \frac{dY_2}{dx_2}dx_2 \end{pmatrix}$\\
+          This is a tool for description
+    \item[Metric tensor ($g_{ij}$)] ~\\
+          Assume that Y is WTI/USD and Z is USD/KRW, and we don't know the Jacobian $\nabla_x Y$ and $\nabla_x Z$, where $x$ is the state variable that completely describes the economic system.\\
+          Then we track a trajectory of a brownian motion $(Y(t), Z(t))$.\\
+          Assume that we are blind to $x$. Like Hellen Keller.\\
+          So, to us, $(Y,Z)$ is the state variable, but we can imagine that $(Y,Z)$ is a point in a 2D manifold.\\
+          We model it as a brownian motion with covariance matrix $\Sigma =  \begin{pmatrix} \sigma_Y^2 & \sigma_Y \sigma_Z \rho \\ \sigma_Y \sigma_Z \rho & \sigma_Z^2 \end{pmatrix}$.\\
+          Covariance matrix is a co-metric tensor that operates on covectors.
+          \begin{equation*}
+              g^{ij} =  \langle dx^i, dx^j \rangle
+          \end{equation*}
+          It means that the metric tensor defines this inner product between the basis vectors.
+          \begin{equation*}
+              g_{ij} = \langle \partial_i, \partial_j \rangle
+          \end{equation*}
+    \item[Imagination]
+          We are blind to $x$, but we can imagine $x$ and use Jacobian to describe the manifold.
+          \begin{equation*}
+              \Sigma = \begin{bmatrix} g^{YY} & g^{YZ} \\ g^{ZY} & g^{ZZ} \end{bmatrix} = \begin{bmatrix} \nabla_x Y \cdot \nabla_x Y & \nabla_x Y \cdot \nabla_x Z \\ \nabla_x Z \cdot \nabla_x Y & \nabla_x Z \cdot \nabla_x Z \end{bmatrix}
+          \end{equation*}
+    \item[TODO] ~\\
+          Fisher information
+\end{description}
+\section{Stochastic trajectory on Manifold}
+\begin{description}
+    \item[1D Brownian motion] ~\\
+          \begin{description}
+              \item[Operator] $D \ket{W(t)} = dW(t) $
+              \item[Probability distribution] Histogram of normal distribution\\
+                    \begin{equation*}
+                        P[W(t_0+\Delta t) | t=t_0] = e^{D \Delta t} \ket{W(t_0)} = \ket{W(t_0+ \Delta t)}
+                    \end{equation*}
+              \item[Expectation]
+                    \begin{equation*}
+                        E[W(t_0+\Delta t) | t=t_0] = \bra{W(t_0)} e^{D \Delta t} \ket{W(t_0)} = \bra{W(t_0)} \ket{W(t_0+ \Delta t)}
+                    \end{equation*}
+          \end{description}
+    \item[2D Correlated Diffusion (Riemannian Manifold)] ~\\
+          TODO : Review
+          \begin{description}
+              \item[Generator Operator] ($\mathcal{L}$) :  The single joint time-evolution operator consists of a directional derivative (drift vector field $A$) and the Laplace-Beltrami operator ($\Delta_{\mathcal{M}}$) representing diffusion across the curved manifold:
+                    \begin{equation*}
+                        \mathcal{L} f = A f + \frac{1}{2} \Delta_{\mathcal{M}} f
+                    \end{equation*}
+              \item[Laplace-Beltrami Operator] : Drives the stochastic dispersion, intrinsically coupling the variables through the off-diagonal metric components:
+                    \begin{equation*}
+                        \frac{1}{2} \Delta_{\mathcal{M}} f = \frac{1}{2} g^{ij} \nabla_i \nabla_j f = \frac{1}{2} \left( g^{11} \frac{\partial^2 f}{\partial S^2} + 2 g^{12} \frac{\partial^2 f}{\partial S \partial \delta} + g^{22} \frac{\partial^2 f}{\partial \delta^2} \right)
+                    \end{equation*}
+              \item[Cross-Variation] The covariance term strictly emerges from the geometry of the manifold (the off-diagonal component of the co-metric tensor):
+                    \begin{equation*}
+                        d\langle S, \delta \rangle_t = g^{12} dt = \sigma_1 \sigma_2 \rho S dt
+                    \end{equation*}
+          \end{description}
+\end{description}
+
+
+\end{document}
