@@ -1,0 +1,16 @@
+1. DQN/TD
+Value function estimation for argmax policy
+
+2. REINFORCE/Policy gradient
+Return = intetral(Reward with decay) over a path
+\nabla J \sim E[\nabla J] = \sum_{path}[\nabla J] P(path) = \sum_{samples}[\nabla J] (Empirical distribution) 
+= \sum_{samples}[\nabla E_{path}[Return]] = \sum_{samples}[\nabla \sum( Return(path) P_\theta(path))] (Feynman path integral abstraction. P(path) = P(x_1) \cdot P(x_2) .. etc)
+= \sum_{samples}[\sum( Return(path) P_\theta(path) \nabla \log ( P_\theta(path) ) )] (The trick we use in score matcing or so)
+= \sum_{samples}[E_{path}[Return(path) \nabla \log ( P_\theta(path) ) ]]
+= \sum_{samples}[E_{path}[ discount_sum(s1,s2,s3,...) \nabla \log (P(s1,s2,s3,...)) ]]
+= \sum_{samples}[E_{path}[ discount_sum(s1,s2,s3,...) \sum \nabla \log (P(a_{i+1} | s{i})) ]] (Markovian policy)
+= \sum_{samples}[E_{path}[ E [ discount_sum(s1,s2,s3,...) \sum \nabla \log (P(a_{i+1} | s{i}))  | s_t ] ]] (Tower property, or integration of derivative over time step)
+= \sum_{samples}[ \sum_t E [ discount_sum(s_{t+1},... | s_t) ] \nabla_\theta \log (P(a_{t+1} | s_t)) ] 
+
+3. PPO / Surrogate 
+intead of \pi, \pi_new / \pi_old is the objective (surrogate, importance sampling)
