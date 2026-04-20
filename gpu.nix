@@ -13,4 +13,5 @@
    export EXTRA_LDFLAGS="-L${pkgs.rocmPackages.clr}/lib -L${pkgs.rocmPackages.rocblas}/lib"
    export EXTRA_CCFLAGS="-I${pkgs.rocmPackages.clr}/include"
   '';
+  rocm_python_pkgs = {pythonpkgs} : with pythonpkgs; [torchWithRocm];
 }

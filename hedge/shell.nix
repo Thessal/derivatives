@@ -18,10 +18,13 @@ in pkgs.mkShell{
     pkgs.google-chrome
     antigravity
   ] ++ (with pkgs; [
-    python313 ( with python313.pkgs; [requests pandas linearmodels numpy scipy statsmodels sympy lxml yfinance boto3 fsspec s3fs zstandard] )
     jq
-    python313 ( with python313.pkgs; [ipykernel matplotlib torch] )
-  ]) ++ 
+    python313 
+    ( with python313.pkgs; [requests pandas linearmodels numpy scipy statsmodels sympy lxml yfinance boto3 fsspec s3fs zstandard] )
+    ( with python313.pkgs; [ipykernel matplotlib torch] )
+  ])
+  ++ gpuEnvVar.rocm_python_pkgs {pythonpkgs = pkgs.python313.pkgs;} 
+  ++ 
     [ myRust ] ++ (with pkgs; [
     cargo rustc gcc rustfmt clippy rust-analyzer gdb
   ]) ; 
