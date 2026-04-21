@@ -14,29 +14,34 @@ class Config:
     def state_space_set(x, y:dict) :
         x.S_t, x.tau_t, x.n_t, x.K = (y[k] for k in Config.state_space)
 
-    action_space = [-10.0, -5.0, 0.0, 5.0, 10.0]
+    action_space = torch.arange(-100,101,1).tolist()#[-10.0, -5.0, 0.0, 5.0, 10.0]
 
 class BlackScholesOracle:
     @staticmethod
     def call_price(S, K, tau, r, sigma):
         if tau <= 0:
             return torch.relu(S - K)
-        d1 = (torch.log(S / K) + (r + 0.5 * sigma**2) * tau) / (sigma * math.sqrt(tau))
-        d2 = d1 - sigma * math.sqrt(tau)
+        # sigma = 0.01 (daily volatility )
+        # tau = T / 252 (year)
+        d1 = (torch.log(S / K) + (r + 0.5 * sigma**2) * tau) / (sigma * math.sqrt(tau * 252))
+        d2 = d1 - sigma * math.sqrt(tau * 252)
         N = torch.distributions.Normal(torch.tensor(0.0, device=Config.device), torch.tensor(1.0, device=Config.device))
         return S * N.cdf(d1) - K * math.exp(-r * tau) * N.cdf(d2)
 
 class OptionReplicationEnv:
-    def __init__(self, S0=100.0, K=100.0, T=10.0/252.0, D=10, sigma=0.01, kappa=0.1, cost_multiplier=1.0, tick_size=0.1, rf=0.04):
+    def __init__(self, S0=100.0, K=100.0, T=10.0/252.0, D=10, sigma=0.01, kappa=0.1, cost_multiplier=1.0, tick_size=0.1, rf=0.00):
         self.init_cond = {
             "S_t": torch.tensor(S0, dtype=torch.float32, device=Config.device),
             "tau_t": torch.tensor(T, dtype=torch.float32, device=Config.device), 
             "n_t": torch.tensor(0.0, dtype=torch.float32, device=Config.device), 
             "K": torch.tensor(K, dtype=torch.float32, device=Config.device),
         }
-        # self.D = D                # Trades per day
+        self.D = D                # Trades per day
         # D = 1
-        self.dt = torch.tensor(1.0 / (252.0 * D), dtype=torch.float32, device=Config.device)
+        # self.dt = torch.tensor(1.0 / (252.0 * D), dtype=torch.float32, device=Config.device)
+        self.dt = torch.tensor(1.0 / D, dtype=torch.float32, device=Config.device)  # Unit is day
+        # 0.01 is daily volatility. 
+
         self.sigma = torch.tensor(sigma, dtype=torch.float32, device=Config.device)
         self.kappa = kappa
         self.r = torch.tensor(rf, dtype=torch.float32, device=Config.device)
@@ -61,27 +66,38 @@ class OptionReplicationEnv:
         return self.state
 
     def step(self, action_idx):
+        S_t, tau_t, n_t, K = Config.state_space_get (self)
         trade_qty = torch.squeeze(self.action_space[action_idx])
         
         # 1. Execute Trade & Calculate Cost (Eq. 23)
-        n_t = self.n_t + trade_qty
         cost = self.C * self.tick_size * (torch.abs(trade_qty) + 0.01 * trade_qty**2)
         
         # 2. Simulate GBM Transition
         dW = torch.squeeze(torch.randn(1, device=Config.device) * math.sqrt(self.dt))
-        S_next = self.S_t * torch.exp((self.r - 0.5 * self.sigma**2) * self.dt + self.sigma * dW)
-        tau_next = self.tau_t - self.dt
+        # log(S_next) = log(S_t) + r dt - 1/2 sigma^2 dt + sigma dW 
+        # adjust 1/5 day vol 
+        sigma = self.sigma / math.sqrt(1/self.D)
+        S_next = S_t * torch.exp((self.r - 0.5 * sigma**2) * self.dt + sigma * dW)
+        # Or, S_next = S_t + r S_t dt + sigma S_t dW
+        # S_next = self.S_t + self.r * self.S_t * self.dt + self.sigma * self.S_t * dW
+        tau_next = tau_t - self.dt / 252.0
         
         # 3. Mark to Market Option
-        C_next = BlackScholesOracle.call_price(S_next, self.K, tau_next, self.r, self.sigma)
+        C_next = BlackScholesOracle.call_price(S_next, K, tau_next, self.r, self.sigma)
         
         # 4. Wealth Increment (Hedging a short call: long stock, short call)
         # q_t = PnL of stock - PnL of option
-        q_t = n_t * (S_next - self.S_t) - 100 * (C_next - self.C_t)
+        q_t = n_t * (S_next - S_t) - 100 * (C_next - self.C_t)
         dw_t = q_t - cost
         
         # 5. Mean-Variance Reward (Eq. 22) # for every timestep, not terminal wealth!
         reward = dw_t - (self.kappa / 2.0) * (dw_t**2)
+        # print("underlying pos",n_t , "ret", n_t * (S_next - S_t),)
+        # print("derivative ret", - 100 * (C_next - self.C_t))
+        # print("cost", cost)
+        # print("total ret", dw_t)
+        # print("reward", dw_t , (self.kappa / 2.0) * (dw_t**2), reward)
+        # print()
         
         # Update State
         Config.state_space_set(
@@ -89,11 +105,12 @@ class OptionReplicationEnv:
             {
                 "S_t": S_next, 
                 "tau_t": tau_next,
-                "n_t": n_t, 
+                "n_t": n_t + trade_qty, ## TODO: check timing
                 "K": self.init_cond["K"]
             }
         )
         self.C_t = C_next
+        # self.S_t = S_next
         
         done = tau_next <= 0
         
@@ -172,7 +189,8 @@ class dqn(nn.Module):
             q_next_max = torch.max(self.forward(next_state), dim=1).values
         q_target = reward + self.gamma * q_next_max * (1.0 - done)
         
-        loss = F.mse_loss(q, q_target)
+        # loss = F.mse_loss(q, q_target)
+        loss = F.huber_loss(q, q_target, delta=1.0) 
         return loss
 
 class dqn_popart(nn.Module):
@@ -271,64 +289,74 @@ class dqn_popart(nn.Module):
         loss = F.mse_loss(q, normalized_target)
         return loss
 
-# if __name__=="__main__":
-#     cfg = dict(
-#         S0=100.0, K=100.0, T=21.0/252.0, sigma=0.01, kappa=0.1, cost_multiplier=1.0, tick_size=0.1
-#     )
+if __name__=="__main__":
+    cfg = dict(
+        S0=100.0, K=100.0, T=10.0/252.0, D =5, sigma=0.01, kappa=0.1, cost_multiplier=1.0, tick_size=0.1
+    )
 
-#     env = OptionReplicationEnv(
-#         **cfg
-#     )
-#     history = []
-#     agent = dqn(state_dim = 4, hidden_dim =64)
-#     optimizer = optim.Adam(agent.parameters(), lr= 0.001)
+    # rl.Config.action_space = [-10.0, -5.0, 0.0, 5.0, 10.0] # Need to be modified, but I think this is not the main problem
 
-#     NUM_EPISODES = 1024
+    env = OptionReplicationEnv(
+        **cfg
+    )
+    agent = dqn(state_dim = 4, hidden_dim =64)
+    optimizer = optim.Adam(agent.parameters(), lr= 0.001)
+    loss_log = []
 
-#     # ==========================================
-#     # 1. Simulating the environment to gather Data
-#     # ==========================================
-#     for _ in range(NUM_EPISODES):
-#         state = env.reset()
-#         done = False
-#         while not done:
-#             action = agent.get_action(state, epsilon=0.1)
-#             next_state, reward, done = env.step(action)
+    # for epoch in range(150):
+    for epoch in range(30):
+        history = []
+        print("epoch", epoch)
+
+        NUM_EPISODES = 3000
+        # NUM_EPISODES = 100
+
+        # ==========================================
+        # 1. Simulating the environment to gather Data
+        # ==========================================
+        for _ in range(NUM_EPISODES):
+            state = env.reset()
+            done = False
+            while not done:
+                action = agent.get_action(state, epsilon=0.1)
+                next_state, reward, done = env.step(action)
+                
+                # IMPORTANT: Save 'next_state' and 'done' into history
+                # we use float() for reward and done to ensure they are python floats, not tensors
+                history.append((state, action, float(reward), next_state, float(done)))
+                state = next_state
+                
+        # ==========================================
+        # 2. Ensemble Sampling (Batch Training)
+        # ==========================================
+        # Sample 10% from the collected trajectories
+        sample_size = int(len(history) * 0.1)
+
+        if len(history) >= sample_size and sample_size > 0:
+            # 1. Sample exactly `sample_size` transitions (breaks correlation)
+            batch = random.sample(history, sample_size)
             
-#             # IMPORTANT: Save 'next_state' and 'done' into history
-#             # we use float() for reward and done to ensure they are python floats, not tensors
-#             history.append((state, action, float(reward), next_state, float(done)))
-#             state = next_state
+            # 2. Unpack the batch into separated lists using `zip(*batch)`
+            states, actions, rewards, next_states, dones = zip(*batch)
             
-#     # ==========================================
-#     # 2. Ensemble Sampling (Batch Training)
-#     # ==========================================
-#     # Sample 10% from the collected trajectories
-#     sample_size = int(len(history) * 0.1)
-    
-#     if len(history) >= sample_size and sample_size > 0:
-#         # 1. Sample exactly `sample_size` transitions (breaks correlation)
-#         batch = random.sample(history, sample_size)
-        
-#         # 2. Unpack the batch into separated lists using `zip(*batch)`
-#         states, actions, rewards, next_states, dones = zip(*batch)
-        
-#         # 3. Stack lists into batched PyTorch Tensors
-#         states_t      = torch.stack(states)                            # Shape: [sample_size, 4]
-#         actions_t     = torch.tensor(actions, dtype=torch.long)        # Shape: [sample_size]
-#         rewards_t     = torch.tensor(rewards, dtype=torch.float32)     # Shape: [sample_size]
-#         next_states_t = torch.stack(next_states)                       # Shape: [sample_size, 4]
-#         dones_t       = torch.tensor(dones, dtype=torch.float32)       # Shape: [sample_size]
-        
-#         # 4. Perform a SINGLE batched forward pass and loss calculation
-#         loss = agent.td_loss(states_t, actions_t, rewards_t, next_states_t, dones_t)
-        
-#         # 5. One backprop step for the entire batch
-#         optimizer.zero_grad()
-#         loss.backward()
-#         optimizer.step()
-#         print(f"Collected total {len(history)} transitions.")
-#         print(f"Trained on {sample_size} samples (10%). Loss: {loss.item():.4f}")
+            # 3. Stack lists into batched PyTorch Tensors
+            states_t      = torch.stack(states)                            # Shape: [sample_size, 4]
+            actions_t     = torch.tensor(actions, dtype=torch.long)        # Shape: [sample_size]
+            rewards_t     = torch.tensor(rewards, dtype=torch.float32)     # Shape: [sample_size]
+            next_states_t = torch.stack(next_states)                       # Shape: [sample_size, 4]
+            dones_t       = torch.tensor(dones, dtype=torch.float32)       # Shape: [sample_size]
+            
+            # 4. Perform a SINGLE batched forward pass and loss calculation
+            # FIXME batch size is too large. Is it a standard implemenation?
+            loss = agent.td_loss(states_t, actions_t, rewards_t, next_states_t, dones_t)
+            
+            # 5. One backprop step for the entire batch
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            print(f"Collected total {len(history)} transitions.")
+            print(f"Trained on {sample_size} samples (10%). Loss: {loss.item():.4f}")
+            loss_log.append(loss.item())
 
 
 class PPOActorCritic(nn.Module):
