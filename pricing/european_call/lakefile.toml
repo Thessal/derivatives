@@ -1,0 +1,10 @@
+name = "european_call"
+version = "0.1.0"
+defaultTargets = ["european_call"]
+
+[[lean_lib]]
+name = "EuropeanCall"
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"

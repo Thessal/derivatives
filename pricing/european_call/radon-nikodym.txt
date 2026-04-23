@@ -1,0 +1,62 @@
+# Repeatedly writing down \frac{1}{\sqrt{2\pi}} e^{- \frac{x^2}{2}} does not help you to understand.
+# So I think we should use N(x) which is the CDF of standard normal distribution.
+
+N(x) = \int_{-\inf}^{x} \frac{1}{\sqrt{2\pi}} e^{- \frac{t^2}{2}} dt
+S(t) := underlying price at time t 
+T : Maturity 
+E : Strike price 
+r_f : risk free rate
+r_{fin} : financing cost for me
+C(t) : discounted call option price at time t
+C(T) : call option price at the maturity
+C(T) = [S(T) - E]^+ : Terminal condition of call option price. (Payoff)
+
+GBM: 
+d(log(S)) = \mu dt + \sigma dW
+log(S(T)) = log(S(t)) + (\mu - \sigma^2/2)(T-t) + \sigma \sqrt(T-t) Y 
+Where Y ~ N(0,1). Y is a random variable.
+That means P[log(S(T)) = log(S(t)) + (\mu - \sigma^2/2)(T-t) + \sigma \sqrt(T-t) Y | t ] = \frac{\d N(x)}{\d x}
+
+Drift here is risk free rate, because the risk and the premium is caused by option traders.
+Stock traders provide liquidity for the informed traders and they are paid for the risk. 
+Scenario:
+Information arrives to the institutional trader at time t. They know E[S(t+dt) exp(-r dt)] >> S(t)
+They could buy stock, but let's assume that they longs calls for leverage and risk management. They absorbs liquidity in option market.
+Delta hedgers provide liquidity in option market and absorbs liquidity in stock market.
+Delta hedgers are less informed than institutional traders, so E[C(T)|t] = E[C(T)|t-dt]
+But delta hedgers now have short position in option so they buy stocks at time t.
+Uninformed market maker in stock market often fails, even though there is reversion. They provided liquidity and not get paid because they bought expired information.
+AS A RESULT, risk in stock market is generated and long-term passive stock holders suffer pain and get paid (averaged into equity risk premium).
+To summarize, delta hedgers be risk neutral (\mu = r_f), but tipped by the institutional traders.
+It explains why \mu prediction does not work well in stock market for retail traders.
+On the other hand, volatility changing information is another story.
+
+So, let's assuming \mu = r_f because we don't have information and we are risk neutral.
+
+Call option price, with discount factor D = e^{-r_{fin}(T-t)} (D=1 at T=t)
+C(t) = D * E[C(T) | t] 
+= \int_{-\inf}^{\inf} [S(T) - E]^+ \frac{\d N(x)}{\d x} dx
+
+Here we define an instance of Y, that makes [S(T) - E] = 0, where Y=-d_2
+0 = log(S(T)) - log(E) = log(S(t)) + (r_f - \sigma^2/2)(T-t) - \sigma \sqrt(T-t) d_2 - log(E)
+d_2 \to -\inf as S(t) \to 0 (log(S(T)) \to -\inf)
+d_2 \to \inf as S(t) \to \inf 
+
+Then the call option pricing becomes 
+C(t) / D = \int_{-\inf}^{\inf} [S(T) - E]^+ \frac{\d N(x)}{\d x} dx
+= \int_{-d_2}^{\inf} [S(T) - E] \frac{\d N(x)}{\d x} dx
+
+C(t) / D = \int_{-d_2}^{\inf} S(T) \frac{\d N(x)}{\d x} dx - E \int_{-d_2}^{\inf} \frac{\d N(x)}{\d x} dx
+= S(t) \int_{-d_2}^{\inf} \frac{1}{sqrt{2 \pi }}exp(-\frac{x^2}{2} + \sigma \sqrt(T-t) x + (r_f - \frac{1}{2} \sigma^2)(T-t)) dx - E (N(\inf)-N(-d_2))
+= S(t) \int_{-d_2}^{\inf} \frac{1}{sqrt{2 \pi }}exp(-\frac{(x - \sigma \sqrt(T-t))^2}{2})  e^{r_f(T-t)} dx - E (N(\inf)-N(-d_2))
+= e^{r_f (T-t)}  S(t) \int_{-d_2}^{\inf} \frac{1}{sqrt{2 \pi }}exp(-\frac{(x - \sigma \sqrt(T-t))^2}{2}) dx - E (N(\inf)-N(-d_2))
+= e^{r_f (T-t)}  S(t) \int_{-d_2-\sigma\sqrt{T-t}}^{\inf} \frac{\d N(x)}{\d x} dx - E (N(\inf)-N(-d_2))
+= e^{r_f (T-t)}  S(t) [N(\inf) - N(-d_1)] - E (N(\inf)-N(-d_2))
+= e^{r_f (T-t)}  S(t) N(d_1) - E N(d_2)
+= e^{(r_f-r_{fin}) (T-t)} / D (S(t) N(d_1)) - E * N(d_2)
+
+It's not clear where we applied boundary conditions, but anyway 
+
+It results 
+C(t) = S(t) N(d_1) - E e^{-r_{fin}(T-t)} N(d_2)
+when r_f = r_{fin}.
