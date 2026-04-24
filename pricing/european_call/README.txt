@@ -20,4 +20,4 @@ To summarize, delta hedgers be risk neutral (\mu = r_f), but tipped by the insti
 It explains why \mu prediction does not work well in stock market for retail traders.
 On the other hand, volatility changing information is another story.
 
-So, let's assuming \mu = r_f because we don't have information and we are risk neutral.
+So, let's be assuming \mu = r_f because we don't have information and we are risk neutral.
