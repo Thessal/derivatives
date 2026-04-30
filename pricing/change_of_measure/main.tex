@@ -1,0 +1,112 @@
+\documentclass[]{beamer}
+% \usetheme{metropolis} 
+\usepackage{amsmath, amsfonts, amssymb}
+
+\title{Journal Club}
+\subtitle{Schulman, John, et al. "Proximal policy optimization algorithms." arXiv preprint arXiv:1707.06347 (2017).}
+\author{Jongkook Choi}
+\date{2026-04-29}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}{Introduction}
+
+    \begin{itemize}
+        \item Schulman, John, et al. "Proximal policy optimization algorithms." arXiv preprint arXiv:1707.06347 (2017).
+        \item Cited by 38489
+        \item[] 
+        \item John Schulman : Co-founder of OpenAI.
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}{Policy Gradient}
+    \textbf{Conceptual Framework}
+    \begin{itemize}
+        \item \textbf{Objective:} Optimal control of stochastic trajectories by finding a policy $\pi_{\theta}$ that maximizes the expected cumulative reward $J(\theta) = \mathbb{E}_{\tau \sim \pi_{\theta}}[\sum r_t]$.
+        \item \textbf{From SDEs to RL:} Applying the Markov assumption to stochastic processes allows us to parameterize the control law as a stochastic policy $\pi_{\theta}(a_t | s_t)$.
+    \end{itemize}
+
+    \textbf{The Policy Gradient Theorem}
+    The gradient of the objective is estimated using the log-derivative trick (likelihood ratio):
+    $$ \nabla_{\theta} J(\theta) = \mathbb{E}_{\tau \sim \pi_{\theta}} \left[ \sum_{h=0}^{H-1} \nabla_{\theta} \ln \pi_{\theta}(a_h | s_h) R_h \right] $$
+
+\end{frame}
+
+\begin{frame}{}
+    \textbf{Supervised Learning}
+    \begin{itemize}
+        \item \textbf{Data-Driven:} Track individual "particles" (data points) to sample sequences from a fixed dataset.
+        \item \textbf{Objective:} Train the Transformer using Maximum Likelihood Estimation (MLE) until prediction accuracy is maximized.
+    \end{itemize}
+    
+    \vfill
+    
+    \textbf{Monte Carlo Approach (Policy Gradient/PPO)}
+    \begin{itemize}
+        \item \textbf{Feynman-Kac:} The expected outcome of a stochastic process (SDE) can be estimated by sampling trajectories dictated by a "drift" term (PDE).
+        \item \textbf{Objective:} Train the Transformer to optimize this drift (the policy), shifting the distribution toward high-reward trajectories. (so-called delta hedge)
+    \end{itemize}
+\end{frame}
+
+% \begin{frame}{Importance Sampling}
+
+%     Monte Carlo method requires many sampling when the variance of the distribution can be high. (e.g. extreme reward, rare actions)
+
+%     To reduce it, we can update the policy much when we got the rare observation. 
+
+%     Measure theoretically speaking, 
+%     $$E_P[X] = \int X p(x) dx = \int X dP = \int X dP/dQ dQ = E_Q[X dP/dQ]$$
+    
+%     dP/dQ here is the importance of the sampled step.
+% \end{frame}
+
+\begin{frame}{Importance Sampling: Change of Measure}
+    \textbf{Motivation: Rare Events \& High Variance}
+    \begin{itemize}
+        \item Monte Carlo estimation suffers from high variance when target events are rare or the distribution has heavy tails.
+    \end{itemize}
+    ~\\
+    \textbf{Change of Measure}
+    To estimate $\mathbb{E}_P[f(X)]$ using samples from $Q$:
+    $$ \mathbb{E}_P[f(X)] = \int f(x) p(x) dx = \int f(x) \frac{p(x)}{q(x)} q(x) dx = \mathbb{E}_Q \left[ f(X) \frac{dP}{dQ} \right] $$
+
+    $\rightarrow$ Efficient data usage is possible when P is close enough to the Q
+
+\end{frame}
+
+\begin{frame}
+    \textbf{Application in PPO}
+    \begin{itemize}
+        \item \textbf{Target ($P$):} The new policy $\pi_{\theta}$ we want to optimize.
+        \item \textbf{Proposal ($Q$):} The old policy $\pi_{\theta_{old}}$ used for data collection.
+        \item \textbf{The Ratio ($dP/dQ$):} The importance weight $r_t(\theta) = \frac{\pi_{\theta}(a_t|s_t)}{\pi_{\theta_{old}}(a_t|s_t)}$.
+    \end{itemize}
+
+    \textbf{Example}
+    \begin{itemize}
+        \item Calculate importance under Markovian assumption $\frac{dP}{dQ} = \frac{\pi_{\theta}(a_t|s_t)}{\pi_{\theta_{old}}(a_t|s_t)}$. (You can calculate it from the logits)
+        \begin{itemize}
+            \item You could add transformer context as state, but there's high chance of you facing the curse of dimensionaliy.
+        \end{itemize}
+        \item Sample trajectories using $\pi_{old}$
+        \item Multiply weight using the importance, 
+        \item Estimate the expected gradient using the law of large numbers  
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Proximal policy optimization}
+    "Proximal" : Keeping the new policy within a specific "proximity" or neighborhood of the old policy
+\\~\\
+    \textbf{PPO with Clipping and the Pessimistic Bound}\\
+    For stability, PPO defines a pessimistic lower bound on the objective
+    $$ L^{CLIP}(\theta) = \mathbb{E}_t \left[ \min \left( r_t(\theta) (R_t - B_t), \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon) (R_t-B_t) \right) \right] $$
+    \begin{itemize}
+        \item Ignores improvement by extreme choice (gradient becomes zero when reward is greater than baseline and the importance is high) 
+        \item Ignores bad luck when the choice is normal (gradient becomes zero when reward is less than baseline and the importance is high) 
+    \end{itemize}
+\end{frame}
+
+\end{document}
