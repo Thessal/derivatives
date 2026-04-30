@@ -9,5 +9,5 @@ These are good abtraction, and it is linked to the reason why often financial si
 For a hedger, change of measure is not a problem because the exposure (e.g. delta) is zero.
 To simply put, E_P[\delta] = E_Q[\delta dP/dQ] = 0 when delta = 0.
 
-So I guess PPO provides efficiently for delta hedging, relative to DQN.
+So I guess PPO provides efficiently for delta hedging, relative to TD/REINFORCE.
 But note that alpha seeker have to explot the systemic error induced by the method often used by other traders. 
