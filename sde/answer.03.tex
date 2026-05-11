@@ -1,0 +1,86 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{physics}
+
+\title{Change of measure and Girsanov's Theorem}
+\author{Jongkook Choi}
+\date{\today}
+\begin{document}
+
+\maketitle
+
+\section{Translational symmetry of a trajectory}
+A trajectory is a property of a physical object.
+\begin{description}
+    \item[Definition] A physical object with a quantity $X$
+    \item[Definition] Representation of $X$ in the reference frame ($P$)\\ $dX = \mu dt + \sigma dW^P$.
+    \item[Definition] Representation of $X$ for a drifitng(with $\mu$) observer ($Q$) \\ $d' X = \sigma dW^Q$.
+    \item[Observation] Mean \\
+          $\mathbb{E}^P[X(T)- X(t) ] = \mathbb{E}^P[ \int_t^T dX] =  \mu (T-t)$\\
+          $\mathbb{E}^Q[X(T) -X(t) ] = \mathbb{E}^Q[ \int_t^T d'X] = 0$.
+    \item[Observation] Second Moment \\
+          $\mathbb{E}^P[(X(T)-X(t))^2] =  \mathbb{E}^P[(\int_t^T dX)^2]=  \sigma^2 (T-t) + \mu^2(T-t)^2$\\
+          $\mathbb{E}^Q[(X(T)-X(t))^2] =  \mathbb{E}^Q[(\int_t^T d'X)^2]=  \sigma^2 (T-t)$
+    \item[Abstraction] Common physical intuition on Brownian motion
+
+\end{description}
+% ~\\
+\textbf{Note} :
+\begin{itemize}
+    \item Physical quantity is somthing conserved under transformation
+    \item Martingale under $Q$ is $\mathbb{E}^Q[X(T)|\mathcal{F}_t] = X(t)$, which is conserved amount over time transform.
+    \item $\mathbb{E}^P[X(T)|\mathcal{F}_t] \neq X(t)$, so $P$ is less useful frame.
+\end{itemize}
+
+\section{Change of measure for probability distribution }
+Is probability distribution a physical object?
+\begin{description}
+    \item[Observation] $\frac{dP}{d(X(T)-X(t))} = P^P(X(T)-X(t)) = N(\mu (T-t), \sigma^2 (T-t))$
+    \item[Observation] $\frac{dQ}{d(X(T)-X(t))} = P^Q(X(T)-X(t)) = N(0, \sigma^2 (T-t))$
+    \item[Abstraction] Probability space $(\Omega, \mathcal{F}, P)$ ,  $(\Omega, \mathcal{F}, Q)$% (I'm not sure about the mapping)
+    \item[Observation] $\frac{dP}{dQ} = \frac{P^P(X(T)-X(t))}{P^Q(X(T)-X(t))} $\\
+          $= \frac{\exp \frac{-(X(T)-X(t)-\mu (T-t))^2}{2\sigma^2 (T-t)}}{\exp \frac{-(X(T)-X(t))^2}{2\sigma^2 (T-t)}} = \exp \frac{-(X(T)-X(t)-\mu (T-t))^2+(X(T)-X(t))^2}{2\sigma^2 (T-t)}$ % is it correct and common notation?
+
+\end{description}
+
+\section{GBM case}
+\begin{description}
+    \item[Definition] $X = \log S$ \\
+          P: reference frame \\
+          Q: drifting with $\mu S dt$. $dS = \mu S dt + \sigma S dW^P$.
+    \item[Definition] Representation of $S$ in the reference frame ($P$) \\
+          $dS = S (\mu dt + \sigma dW^P)$.
+    \item[Definition] Representation of $S$ for a drifitng(with $\mu$) observer ($Q$) \\
+          $d' S = S (\sigma dW^Q)$
+    \item[Observation] ~\\
+          Under $\mathcal{F}_t$, \\
+          $\frac{dP}{d(X(T)-X(t))} = p^P(X(T)-X(t)) = N( (\mu - \frac{1}{2}\sigma^2) (T-t), \sigma^2 (T-t))$\\
+          $\frac{dQ}{d(X(T)-X(t))} = p^Q(X(T)-X(t)) = N( (- \frac{1}{2}\sigma^2) (T-t), \sigma^2 (T-t))$\\
+          % \item[Observation] ~\\
+          %   $\frac{dP}{d(S(T)/S(t))} = \frac{dP}{d(X(T)/X(t))} \frac{d(\log(S(T) - S(t)))}{d(S(T)/S(t))}= \frac{dP}{d(X(T)/X(t))} \frac{1 } {S(T) - S(t)}$
+    \item[Observation] ~\\
+          $\frac{dP}{dQ} =
+              \frac{P^P(X(T)-X(t))}{P^Q(X(T)-X(t))} =
+              \frac{\exp \frac{-(X(T)-X(t)-(\mu - \frac{1}{2} \sigma^2) (T-t))^2}{2\sigma^2 (T-t)}}{\exp \frac{-(X(T)-X(t)-(- \frac{1}{2} \sigma^2) (T-t))^2}{2\sigma^2 (T-t)}} $ \\
+          $= \exp \frac{-(X(T)-X(t)-(\mu - \frac{1}{2} \sigma^2) (T-t))^2+(X(T)-X(t)-(- \frac{1}{2} \sigma^2) (T-t))^2}{2\sigma^2 (T-t)}$\\
+          $= \exp \frac{-(\Delta X-(\mu - \frac{1}{2} \sigma^2) \Delta t)^2+(\Delta X-(- \frac{1}{2} \sigma^2) \Delta t)^2}{2\sigma^2 \Delta t}$\\
+          $= \exp \frac{2 \Delta t  \Delta X (\mu - \frac{1}{2} \sigma^2) +\sigma^2 \Delta X \Delta t - \mu^2 \Delta t^2 + \sigma^2 \mu \Delta t ^2  }{2\sigma^2 \Delta t }$\\
+          %   $= \exp \frac{-(\Delta X - (\mu - \frac{1}{2}\sigma^2)\Delta t)^2 + (\Delta X - (-\frac{1}{2}\sigma^2)\Delta t)^2}{2\sigma^2}$\\
+          $ = \exp \frac{2\mu \Delta X \Delta t - (\mu^2 - \mu\sigma^2)\Delta t^2}{2\sigma^2 \Delta t}$
+          $ = \exp \left( \frac{\mu}{\sigma^2}\Delta X - \frac{\mu^2-\mu\sigma^2}{2\sigma^2}\Delta t \right)$\\
+          $ = \exp \left( \frac{\mu}{\sigma^2} ( (\mu - \frac{1}{2} \sigma^2 )  \Delta t + \sigma  \Delta W^P  )  - \frac{\mu^2-\mu\sigma^2}{2\sigma^2}\Delta t \right)$\\
+          $ = \exp \left( (\frac{\mu^2}{2\sigma^2} ) ( \Delta t )+ \frac{\mu}{\sigma}  (\Delta W^P ) \right)$
+\end{description}
+
+\section{Abstraction : Girsanov theorem}
+\begin{itemize}
+    \item Girsanov thm  \\
+          $ Z_t = \left. \frac{d\mathbb{Q}}{d\mathbb{P}} \right|_{\mathcal{F}_t} = \exp\left( - \int_0^t \theta_s dW_s^P - \frac{1}{2} \int_0^t \theta_s^2 ds \right) $
+          , $\theta_s = \frac{\mu}{\sigma}$
+    \item Consistency check \\
+          $\frac{dP}{dQ}  \frac{dQ}{dP} =  \exp \left( \mathbf{+}(\frac{\mu^2}{2\sigma^2} ) ( \Delta t )+ \frac{\mu}{\sigma} (\Delta W^P ) \mathbf{-} \int_0^t \theta_s dW_s^P - \frac{1}{2} \int_0^t \theta_s^2 ds \right) = 1 $
+\end{itemize}
+
+
+\end{document}
