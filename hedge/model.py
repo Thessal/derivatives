@@ -90,8 +90,11 @@ def compute_rewards(agent, action_dim, bs, sim_step, E, dc, ds, curr_s, states, 
     reward_stop = exercise_payout - previous_rewards_sum
     # Du(2020) seems to use return, but we don't include tcost... 
     # So we modify the target from more pnl, to perfect hedge
-    # reward_continue = reward_continue - kappa * reward_continue * reward_continue # risk aversion
-    reward_continue = - torch.abs(reward_continue)
+    # case 1) it takes more time but it is optimizing mean-variance
+    reward_continue = reward_continue - kappa * reward_continue * reward_continue # risk aversion
+    reward_stop = reward_stop - kappa * reward_stop * reward_stop
+    # case 2) it converges fast but it is not optimizing mean-variance
+    # reward_continue = - torch.abs(reward_continue)
     # reward_continue = reward_continue - 0.1 * (reward_continue - (r- q)) *2 # should we do this?
  
     rewards = torch.full((sim_step-1, bs), torch.nan)

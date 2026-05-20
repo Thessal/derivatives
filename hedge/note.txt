@@ -1,0 +1,2 @@
+instead of d\pi as reward function,
+how about using (S_T - Average purchase price) \Delta and actual payout for t=T?
